@@ -1,0 +1,12 @@
+{
+  "name": "talabatk-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "backend:install": "cd backend && npm install",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:seed": "cd backend && npm run seed",
+    "docker:up": "docker compose -p talabatk up -d",
+    "docker:down": "docker compose -p talabatk down"
+  }
+}

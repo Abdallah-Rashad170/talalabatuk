@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم - طلباتك مكانك</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --orange:#ff6b00; --red:#ff2d2d; --dark:#0f172a; --dark2:#1e293b;
+    --dark3:#334155; --dark4:#475569; --white:#ffffff; --gray:#94a3b8;
+    --green:#22c55e; --blue:#3b82f6; --purple:#a855f7; --yellow:#eab308;
+    --sidebar-w:260px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Cairo',sans-serif;background:var(--dark);color:var(--white);display:flex;min-height:100vh;direction:rtl;}
+
+  /* SIDEBAR */
+  .sidebar{
+    width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;position:sticky;top:0;
+    background:var(--dark2);border-left:1px solid rgba(255,255,255,0.06);
+    display:flex;flex-direction:column;overflow-y:auto;
+  }
+  .sidebar-logo{
+    padding:1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);
+    display:flex;align-items:center;gap:12px;
+  }
+  .sidebar-logo-icon{
+    width:42px;height:42px;background:linear-gradient(135deg,var(--orange),var(--red));
+    border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;
+    box-shadow:0 4px 15px rgba(255,107,0,0.3);
+  }
+  .sidebar-logo-text{font-size:0.95rem;font-weight:900;line-height:1.2;}
+  .sidebar-logo-sub{font-size:0.65rem;color:var(--orange);font-weight:600;}
+  .sidebar-section{padding:1rem 1rem 0.5rem;font-size:0.7rem;color:var(--dark4);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .sidebar-item{
+    display:flex;align-items:center;gap:12px;padding:10px 1rem;margin:2px 8px;
+    border-radius:10px;cursor:pointer;transition:all 0.2s;color:var(--gray);
+    font-size:0.9rem;font-weight:600;text-decoration:none;
+  }
+  .sidebar-item:hover{background:rgba(255,255,255,0.05);color:var(--white);}
+  .sidebar-item.active{background:linear-gradient(135deg,rgba(255,107,0,0.2),rgba(255,45,45,0.1));color:var(--orange);border:1px solid rgba(255,107,0,0.2);}
+  .sidebar-item-icon{font-size:18px;min-width:22px;text-align:center;}
+  .sidebar-item-badge{
+    margin-right:auto;background:var(--orange);color:white;
+    font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;
+  }
+  .sidebar-bottom{margin-top:auto;padding:1rem;border-top:1px solid rgba(255,255,255,0.06);}
+  .user-card{display:flex;align-items:center;gap:10px;}
+  .user-avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg,var(--orange),var(--red));
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;
+  }
+  .user-name{font-size:0.85rem;font-weight:700;}
+  .user-role{font-size:0.7rem;color:var(--gray);}
+
+  .login-overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,0.96);z-index:2000;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .login-card{
+    width:min(520px,100%);background:var(--dark2);border:1px solid rgba(255,255,255,0.08);
+    border-radius:24px;padding:2rem;box-shadow:0 30px 80px rgba(0,0,0,0.55);
+  }
+  .login-card h2{font-size:1.8rem;margin-bottom:0.5rem;color:white;}
+  .login-card p{color:var(--gray);margin-bottom:1.5rem;line-height:1.7;}
+  .form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem;}
+  .form-group label{font-size:0.85rem;color:var(--gray);}
+  .form-group input{
+    background:var(--dark);border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;padding:14px 16px;color:white;font-size:0.95rem;outline:none;
+  }
+  .form-group input:focus{border-color:rgba(255,107,0,0.5);}
+  .login-button{
+    width:100%;padding:14px 16px;border:none;border-radius:16px;
+    background:linear-gradient(135deg,var(--orange),var(--red));color:white;
+    font-weight:700;font-size:1rem;cursor:pointer;transition:all 0.2s;
+  }
+  .login-button:hover{transform:translateY(-1px);}
+  .login-error{color:#f87171;font-size:0.95rem;margin-top:0.75rem;min-height:1.2rem;}
+  .logout-btn{
+    padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);
+    background:transparent;color:var(--white);cursor:pointer;transition:all 0.2s;
+  }
+  .logout-btn:hover{border-color:rgba(255,107,0,0.3);}
+
+  /* MAIN */
+  .main{flex:1;display:flex;flex-direction:column;overflow-x:hidden;}
+
+  /* TOPBAR */
+  .topbar{
+    position:sticky;top:0;z-index:100;
+    background:rgba(15,23,42,0.9);backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    padding:0.75rem 1.5rem;display:flex;align-items:center;gap:1rem;
+  }
+  .topbar-title{font-size:1.1rem;font-weight:700;}
+  .topbar-subtitle{font-size:0.8rem;color:var(--gray);margin-right:auto;}
+  .topbar-actions{display:flex;align-items:center;gap:12px;margin-right:auto;}
+  .search-bar{
+    background:var(--dark2);border:1px solid rgba(255,255,255,0.06);
+    border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;
+    font-family:'Cairo',sans-serif;font-size:0.85rem;color:var(--gray);
+    min-width:200px;
+  }
+  .search-bar input{background:transparent;border:none;outline:none;color:var(--white);font-family:'Cairo',sans-serif;width:100%;}
+  .icon-btn{
+    width:38px;height:38px;border-radius:10px;background:var(--dark2);
+    border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;
+    justify-content:center;cursor:pointer;font-size:18px;transition:all 0.2s;
+    position:relative;
+  }
+  .icon-btn:hover{border-color:rgba(255,107,0,0.3);background:rgba(255,107,0,0.05);}
+  .notif-dot{
+    position:absolute;top:6px;left:6px;width:8px;height:8px;
+    background:var(--red);border-radius:50%;border:2px solid var(--dark);
+  }
+  .status-live{
+    display:flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);
+    border:1px solid rgba(34,197,94,0.2);padding:6px 12px;border-radius:8px;
+    font-size:0.8rem;color:var(--green);font-weight:700;
+  }
+  .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+  /* CONTENT */
+  .content{padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;}
+
+  /* STAT CARDS */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;}
+  .stat-card{
+    background:var(--dark2);border-radius:16px;padding:1.25rem;
+    border:1px solid rgba(255,255,255,0.06);position:relative;overflow:hidden;
+    transition:all 0.3s;
+  }
+  .stat-card:hover{border-color:rgba(255,107,0,0.2);transform:translateY(-2px);}
+  .stat-card::before{
+    content:'';position:absolute;inset:0;border-radius:16px;opacity:0;
+    background:linear-gradient(135deg,rgba(255,107,0,0.04),transparent);
+    transition:opacity 0.3s;
+  }
+  .stat-card:hover::before{opacity:1;}
+  .stat-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+  .stat-card-icon{
+    width:46px;height:46px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-size:22px;
+  }
+  .stat-card-badge{
+    display:flex;align-items:center;gap:4px;font-size:0.75rem;font-weight:700;
+    padding:4px 10px;border-radius:20px;
+  }
+  .badge-up{background:rgba(34,197,94,0.1);color:var(--green);}
+  .badge-down{background:rgba(239,68,68,0.1);color:#ef4444;}
+  .stat-card-num{font-size:2rem;font-weight:900;margin-bottom:4px;}
+  .stat-card-label{font-size:0.8rem;color:var(--gray);font-weight:600;}
+
+  /* CHARTS ROW */
+  .charts-row{display:grid;grid-template-columns:2fr 1fr;gap:1rem;}
+  .chart-card{
+    background:var(--dark2);border-radius:16px;padding:1.25rem;
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .chart-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;}
+  .chart-title{font-size:0.95rem;font-weight:700;}
+  .chart-subtitle{font-size:0.75rem;color:var(--gray);}
+  .tab-pills{display:flex;gap:4px;background:var(--dark);border-radius:8px;padding:3px;}
+  .tab-pill{
+    padding:5px 14px;border-radius:6px;font-size:0.75rem;font-weight:700;
+    cursor:pointer;color:var(--gray);transition:all 0.2s;border:none;font-family:'Cairo',sans-serif;background:transparent;
+  }
+  .tab-pill.active{background:linear-gradient(135deg,var(--orange),var(--red));color:white;}
+
+  /* ORDERS TABLE */
+  .table-card{background:var(--dark2);border-radius:16px;border:1px solid rgba(255,255,255,0.06);}
+  .table-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .table-actions{display:flex;gap:8px;}
+  .btn-sm{
+    padding:7px 14px;border-radius:8px;font-size:0.8rem;font-weight:700;
+    cursor:pointer;font-family:'Cairo',sans-serif;border:none;transition:all 0.2s;
+  }
+  .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--gray);}
+  .btn-outline:hover{border-color:var(--orange);color:var(--orange);}
+  .btn-primary{background:linear-gradient(135deg,var(--orange),var(--red));color:white;}
+  .btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+  table{width:100%;border-collapse:collapse;}
+  th{
+    padding:10px 16px;font-size:0.75rem;font-weight:700;color:var(--gray);
+    text-align:right;border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  td{padding:12px 16px;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.04);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .order-id{font-weight:700;color:var(--orange);}
+  .status-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;
+  }
+  .status-pending{background:rgba(234,179,8,0.1);color:var(--yellow);}
+  .status-accepted{background:rgba(59,130,246,0.1);color:var(--blue);}
+  .status-onway{background:rgba(168,85,247,0.1);color:var(--purple);}
+  .status-delivered{background:rgba(34,197,94,0.1);color:var(--green);}
+  .status-cancelled{background:rgba(239,68,68,0.1);color:#ef4444;}
+  .rider-badge{
+    display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;
+  }
+  .rider-avatar-sm{
+    width:26px;height:26px;border-radius:50%;
+    background:linear-gradient(135deg,var(--orange),var(--red));
+    display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+  }
+
+  /* BOTTOM ROW */
+  .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .panel-card{background:var(--dark2);border-radius:16px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;}
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .panel-title{font-size:0.95rem;font-weight:700;}
+  .rider-item{
+    display:flex;align-items:center;gap:12px;padding:12px 1.25rem;
+    border-bottom:1px solid rgba(255,255,255,0.04);transition:all 0.2s;
+  }
+  .rider-item:hover{background:rgba(255,255,255,0.02);}
+  .rider-item:last-child{border-bottom:none;}
+  .rider-av{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg,var(--orange),var(--red));
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;
+    position:relative;
+  }
+  .online-indicator{
+    position:absolute;bottom:1px;left:1px;width:10px;height:10px;
+    border-radius:50%;border:2px solid var(--dark2);
+  }
+  .online{background:var(--green);}
+  .offline{background:var(--dark4);}
+  .rider-info{flex:1;}
+  .rider-name{font-size:0.85rem;font-weight:700;}
+  .rider-stats-sm{font-size:0.75rem;color:var(--gray);}
+  .rider-orders{
+    display:flex;flex-direction:column;align-items:flex-end;
+    font-size:0.8rem;font-weight:700;color:var(--orange);
+  }
+  .rider-orders span{font-size:0.7rem;color:var(--gray);font-weight:400;}
+  .notif-item{
+    display:flex;align-items:flex-start;gap:10px;padding:12px 1.25rem;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .notif-item:last-child{border-bottom:none;}
+  .notif-icon{
+    width:34px;height:34px;min-width:34px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:16px;
+  }
+  .notif-text{font-size:0.82rem;line-height:1.5;}
+  .notif-time{font-size:0.72rem;color:var(--gray);margin-top:2px;}
+
+  /* MAP PANEL */
+  .map-panel{
+    background:var(--dark2);border-radius:16px;border:1px solid rgba(255,255,255,0.06);
+    overflow:hidden;
+  }
+  .fake-map{
+    height:240px;position:relative;
+    background:linear-gradient(135deg,#0d2317,#1a3a2a);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .map-grid-h,.map-grid-v{position:absolute;background:rgba(255,255,255,0.05);}
+  .map-grid-h{width:100%;height:1px;}
+  .map-grid-v{height:100%;width:1px;}
+  .map-rider-dot{
+    position:absolute;width:16px;height:16px;border-radius:50%;
+    background:var(--orange);border:2px solid white;cursor:pointer;
+    transition:all 0.3s;
+  }
+  .map-rider-dot::after{
+    content:'';position:absolute;inset:-6px;border-radius:50%;
+    border:2px solid rgba(255,107,0,0.3);animation:ping 1.5s ease-out infinite;
+  }
+  @keyframes ping{0%{transform:scale(1);opacity:1}100%{transform:scale(1.8);opacity:0}}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--dark3);border-radius:3px;}
+
+  @media(max-width:1200px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .charts-row{grid-template-columns:1fr;}
+    .bottom-row{grid-template-columns:1fr;}
+  }
+  @media(max-width:768px){
+    .sidebar{display:none;}
+    .stats-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <h2>تسجيل دخول الإدارة</h2>
+    <p>استخدم رقم الهاتف وكلمة المرور للدخول إلى لوحة التحكم.</p>
+    <div class="form-group">
+      <label for="adminPhone">رقم الهاتف</label>
+      <input id="adminPhone" type="text" placeholder="01015819017" value="01015819017">
+    </div>
+    <div class="form-group">
+      <label for="adminPassword">كلمة المرور</label>
+      <input id="adminPassword" type="password" placeholder="كلمة المرور">
+    </div>
+    <button id="loginBtn" class="login-button">دخول</button>
+    <div id="loginError" class="login-error"></div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🛵</div>
+    <div>
+      <div class="sidebar-logo-text">طلباتك مكانك</div>
+      <div class="sidebar-logo-sub">Admin Panel</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">الرئيسية</div>
+  <a class="sidebar-item active" href="#">
+    <span class="sidebar-item-icon">📊</span> لوحة التحكم
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📦</span> الطلبات
+    <span class="sidebar-item-badge">12</span>
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🗺️</span> التتبع المباشر
+  </a>
+
+  <div class="sidebar-section">الإدارة</div>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🛵</span> المناديب
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">👥</span> العملاء
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🍕</span> المطاعم
+  </a>
+
+  <div class="sidebar-section">المالية</div>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">💰</span> المدفوعات
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📈</span> التقارير
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📄</span> تصدير PDF
+  </a>
+
+  <div class="sidebar-section">النظام</div>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">🔔</span> الإشعارات
+    <span class="sidebar-item-badge">5</span>
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">⚙️</span> الإعدادات
+  </a>
+  <a class="sidebar-item" href="#">
+    <span class="sidebar-item-icon">📋</span> سجل النشاط
+  </a>
+
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar">أد</div>
+      <div>
+        <div class="user-name">الأدمن الرئيسي</div>
+        <div class="user-role">مدير النظام</div>
+      </div>
+      <span style="margin-right:auto;cursor:pointer;color:var(--gray);font-size:16px">↪️</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">لوحة التحكم 📊</div>
+      <div class="topbar-subtitle" id="dashboardDate">الأحد، 16 مايو 2025 • السبت</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="status-live">
+        <span class="live-dot"></span>
+        مباشر
+      </div>
+      <div class="search-bar">
+        🔍 <input type="text" placeholder="بحث في الطلبات...">
+      </div>
+      <div class="icon-btn" title="الإشعارات">
+        🔔
+        <span class="notif-dot"></span>
+      </div>
+      <div class="icon-btn" title="الإعدادات">⚙️</div>
+      <button id="logoutBtn" class="logout-btn" style="display:none;">تسجيل خروج</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-icon" style="background:rgba(255,107,0,0.15)">📦</div>
+          <div class="stat-card-badge badge-up">↑ 12.5%</div>
+        </div>
+        <div class="stat-card-num" id="c1">0</div>
+        <div class="stat-card-label">إجمالي الطلبات اليوم</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-icon" style="background:rgba(34,197,94,0.15)">💰</div>
+          <div class="stat-card-badge badge-up">↑ 8.3%</div>
+        </div>
+        <div class="stat-card-num" id="c2">0 ج</div>
+        <div class="stat-card-label">الأرباح اليومية</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-icon" style="background:rgba(59,130,246,0.15)">🛵</div>
+          <div class="stat-card-badge badge-up">↑ 3</div>
+        </div>
+        <div class="stat-card-num" id="c3">0</div>
+        <div class="stat-card-label">مناديب نشطون الآن</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-icon" style="background:rgba(168,85,247,0.15)">👥</div>
+          <div class="stat-card-badge badge-up">↑ 21</div>
+        </div>
+        <div class="stat-card-num" id="c4">0</div>
+        <div class="stat-card-label">إجمالي العملاء</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-title">📈 إيرادات وطلبات الأسبوع</div>
+            <div class="chart-subtitle">مقارنة الأسبوع الحالي بالماضي</div>
+          </div>
+          <div class="tab-pills">
+            <button class="tab-pill active">أسبوع</button>
+            <button class="tab-pill">شهر</button>
+            <button class="tab-pill">سنة</button>
+          </div>
+        </div>
+        <canvas id="revenueChart" height="90"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-title">🥧 توزيع الطلبات</div>
+            <div class="chart-subtitle">حسب الحالة</div>
+          </div>
+        </div>
+        <canvas id="statusChart" height="160"></canvas>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem">
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ff6b00"></div>قيد التوصيل
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem">
+            <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>تم التسليم
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem">
+            <div style="width:10px;height:10px;border-radius:50%;background:#3b82f6"></div>جديدة
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem">
+            <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>ملغية
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <div class="chart-title">🧾 آخر الطلبات</div>
+          <div class="chart-subtitle">تحديث لحظي كل 30 ثانية</div>
+        </div>
+        <div class="table-actions">
+          <button id="exportPdfBtn" class="btn-sm btn-outline">📄 تصدير PDF</button>
+          <button id="exportExcelBtn" class="btn-sm btn-outline">📊 Excel</button>
+          <button id="refreshBtn" class="btn-sm btn-primary">تحديث</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الطلب</th>
+              <th>العميل</th>
+              <th>المندوب</th>
+              <th>المتجر</th>
+              <th>المنطقة</th>
+              <th>الإجمالي</th>
+              <th>الحالة</th>
+              <th>الوقت</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody">
+            <tr>
+              <td colspan="9" style="text-align:center;padding:2rem;color:var(--gray)">جارٍ تحميل الطلبات...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.05)">
+        <span style="font-size:0.8rem;color:var(--gray)">عرض 6 من 342 طلب</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn-sm btn-outline">السابق</button>
+          <button class="btn-sm btn-primary">التالي</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <!-- RIDERS PANEL -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🛵 المناديب النشطون</div>
+            <div style="font-size:0.75rem;color:var(--gray)">23 مندوب من أصل 50</div>
+          </div>
+          <button class="btn-sm btn-outline">عرض الكل</button>
+        </div>
+        <div class="rider-item">
+          <div class="rider-av">
+            خ
+            <span class="online-indicator online"></span>
+          </div>
+          <div class="rider-info">
+            <div class="rider-name">خالد محمد</div>
+            <div class="rider-stats-sm">⭐ 4.9 • البلينا • 8 طلبات اليوم</div>
+          </div>
+          <div class="rider-orders">12 طلب <span>هذا الأسبوع</span></div>
+        </div>
+        <div class="rider-item">
+          <div class="rider-av">
+            م
+            <span class="online-indicator online"></span>
+          </div>
+          <div class="rider-info">
+            <div class="rider-name">محمود عبدالله</div>
+            <div class="rider-stats-sm">⭐ 4.8 • جرجا • 6 طلبات اليوم</div>
+          </div>
+          <div class="rider-orders">9 طلب <span>هذا الأسبوع</span></div>
+        </div>
+        <div class="rider-item">
+          <div class="rider-av" style="background:var(--dark3)">
+            ع
+            <span class="online-indicator online"></span>
+          </div>
+          <div class="rider-info">
+            <div class="rider-name">عمر حسن</div>
+            <div class="rider-stats-sm">⭐ 4.7 • أبو شوشة • 5 طلبات</div>
+          </div>
+          <div class="rider-orders">7 طلب <span>هذا الأسبوع</span></div>
+        </div>
+        <div class="rider-item">
+          <div class="rider-av" style="background:var(--dark3)">
+            ي
+            <span class="online-indicator offline"></span>
+          </div>
+          <div class="rider-info">
+            <div class="rider-name">يوسف أحمد</div>
+            <div class="rider-stats-sm">⭐ 4.6 • جرجا • غير متاح</div>
+          </div>
+          <div class="rider-orders" style="color:var(--gray)">3 طلب <span>هذا الأسبوع</span></div>
+        </div>
+        <div class="rider-item">
+          <div class="rider-av">
+            ك
+            <span class="online-indicator online"></span>
+          </div>
+          <div class="rider-info">
+            <div class="rider-name">كريم سعيد</div>
+            <div class="rider-stats-sm">⭐ 4.9 • البلينا • 9 طلبات اليوم</div>
+          </div>
+          <div class="rider-orders">15 طلب <span>هذا الأسبوع</span></div>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS PANEL -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">🔔 الإشعارات الأخيرة</div>
+            <div style="font-size:0.75rem;color:var(--gray)">5 إشعارات جديدة</div>
+          </div>
+          <button class="btn-sm btn-outline">مسح الكل</button>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(34,197,94,0.1)">✅</div>
+          <div>
+            <div class="notif-text">الطلب #1046 تم تسليمه بنجاح بواسطة محمود</div>
+            <div class="notif-time">منذ 2 دقيقة</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(255,107,0,0.1)">📦</div>
+          <div>
+            <div class="notif-text">طلب جديد #1047 من العميل محمد أحمد - البلينا</div>
+            <div class="notif-time">منذ 5 دقائق</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(59,130,246,0.1)">🛵</div>
+          <div>
+            <div class="notif-text">المندوب خالد محمد سجل دخوله وجاهز للطلبات</div>
+            <div class="notif-time">منذ 15 دقيقة</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(234,179,8,0.1)">⚠️</div>
+          <div>
+            <div class="notif-text">تأخر في الطلب #1041 - يحتاج متابعة</div>
+            <div class="notif-time">منذ 22 دقيقة</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(168,85,247,0.1)">⭐</div>
+          <div>
+            <div class="notif-text">تقييم جديد 5 نجوم من العميل سارة محمد</div>
+            <div class="notif-time">منذ 35 دقيقة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE MAP PANEL -->
+    <div class="map-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">🗺️ خريطة التتبع المباشر</div>
+          <div style="font-size:0.75rem;color:var(--gray)">23 مندوب نشط الآن في المنطقة</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="status-live"><span class="live-dot"></span>مباشر</div>
+          <button class="btn-sm btn-outline">فتح الخريطة الكاملة</button>
+        </div>
+      </div>
+      <div class="fake-map">
+        <!-- Grid lines -->
+        <div class="map-grid-h" style="top:25%"></div>
+        <div class="map-grid-h" style="top:50%"></div>
+        <div class="map-grid-h" style="top:75%"></div>
+        <div class="map-grid-v" style="left:20%"></div>
+        <div class="map-grid-v" style="left:40%"></div>
+        <div class="map-grid-v" style="left:60%"></div>
+        <div class="map-grid-v" style="left:80%"></div>
+
+        <!-- Roads -->
+        <div style="position:absolute;width:100%;height:3px;background:rgba(255,255,255,0.08);top:50%"></div>
+        <div style="position:absolute;height:100%;width:3px;background:rgba(255,255,255,0.08);left:40%"></div>
+
+        <!-- Area labels -->
+        <div style="position:absolute;top:10%;right:10%;font-size:11px;color:rgba(255,255,255,0.3);font-weight:700">البلينا</div>
+        <div style="position:absolute;top:20%;left:15%;font-size:11px;color:rgba(255,255,255,0.3);font-weight:700">جرجا</div>
+        <div style="position:absolute;bottom:15%;right:15%;font-size:11px;color:rgba(255,255,255,0.3);font-weight:700">أبو شوشة</div>
+
+        <!-- Riders -->
+        <div class="map-rider-dot" style="top:35%;right:25%;background:var(--orange)" title="خالد - في الطريق"></div>
+        <div class="map-rider-dot" style="top:55%;right:45%;background:var(--green)" title="محمود - متاح"></div>
+        <div class="map-rider-dot" style="top:25%;left:30%;background:var(--orange)" title="عمر - في الطريق"></div>
+        <div class="map-rider-dot" style="top:65%;left:20%;background:var(--green)" title="يوسف - متاح"></div>
+        <div class="map-rider-dot" style="top:45%;right:60%;background:var(--orange)" title="كريم - في الطريق"></div>
+        <div class="map-rider-dot" style="top:75%;right:35%;background:var(--green)" title="أحمد - متاح"></div>
+        <div class="map-rider-dot" style="top:20%;right:70%;background:var(--orange)" title="هاني - في الطريق"></div>
+
+        <!-- Legend -->
+        <div style="position:absolute;bottom:12px;right:12px;display:flex;gap:12px;background:rgba(15,23,42,0.8);padding:8px 12px;border-radius:8px;font-size:11px">
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange)"></div>في الطريق</div>
+          <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:50%;background:var(--green)"></div>متاح</div>
+        </div>
+      </div>
+      <div style="padding:12px 1.25rem;display:flex;gap:1rem;border-top:1px solid rgba(255,255,255,0.05)">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--orange)">23</div>
+          <div style="font-size:0.75rem;color:var(--gray)">مندوب نشط</div>
+        </div>
+        <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.06);border-left:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--purple)">14</div>
+          <div style="font-size:0.75rem;color:var(--gray)">طلب في الطريق</div>
+        </div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:1.5rem;font-weight:900;color:var(--green)">25 د</div>
+          <div style="font-size:0.75rem;color:var(--gray)">متوسط وقت التوصيل</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</main>
+
+<script>
+const dashboardDate = document.getElementById('dashboardDate');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+const loginOverlay = document.getElementById('loginOverlay');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const adminPhone = document.getElementById('adminPhone');
+const adminPassword = document.getElementById('adminPassword');
+const loginError = document.getElementById('loginError');
+
+const statusMap = {
+  pending: { label: '⏳ جديد', className: 'status-pending' },
+  accepted: { label: '✔️ مقبول', className: 'status-accepted' },
+  on_the_way: { label: '🛵 في الطريق', className: 'status-onway' },
+  delivered: { label: '✅ تم التسليم', className: 'status-delivered' },
+  cancelled: { label: '❌ ملغي', className: 'status-cancelled' },
+  picked_up: { label: '📦 تم الاستلام', className: 'status-delivered' }
+};
+
+let revenueChart;
+let statusChart;
+
+const chartLabelsDefault = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+
+const formatCurrency = (value) => {
+  return Number(value || 0).toLocaleString('ar-EG') + ' ج';
+};
+
+const getToken = () => localStorage.getItem('talabatk_admin_token');
+const setToken = (token) => localStorage.setItem('talabatk_admin_token', token);
+const clearToken = () => localStorage.removeItem('talabatk_admin_token');
+
+const showLogin = (message) => {
+  loginError.textContent = message || '';
+  loginOverlay.style.display = 'flex';
+  logoutBtn.style.display = 'none';
+};
+
+const hideLogin = () => {
+  loginError.textContent = '';
+  loginOverlay.style.display = 'none';
+  logoutBtn.style.display = 'inline-flex';
+};
+
+const updateDashboardDate = () => {
+  dashboardDate.textContent = new Date().toLocaleDateString('ar-EG', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+  });
+};
+
+const animateCounters = (totals) => {
+  const targets = [
+    { id: 'c1', val: totals.totalOrders || 0, suffix: '' },
+    { id: 'c2', val: Math.round(totals.dailyRevenue || 0), suffix: ' ج' },
+    { id: 'c3', val: totals.activeRiders || 0, suffix: '' },
+    { id: 'c4', val: totals.totalCustomers || 0, suffix: '' }
+  ];
+
+  targets.forEach(({ id, val, suffix }) => {
+    let current = 0;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const step = Math.max(1, val / 45);
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= val) {
+        current = val;
+        clearInterval(timer);
+      }
+      el.textContent = Number(Math.floor(current)).toLocaleString('ar-EG') + suffix;
+    }, 15);
+  });
+};
+
+const initCharts = () => {
+  const ctx1 = document.getElementById('revenueChart').getContext('2d');
+  revenueChart = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: chartLabelsDefault,
+      datasets: [
+        {
+          label: 'الإيرادات (ج)',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#ff6b00',
+          backgroundColor: 'rgba(255,107,0,0.12)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#ff6b00',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'الطلبات',
+          data: [0, 0, 0, 0, 0, 0, 0],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#3b82f6',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, labels: { color: '#94a3b8', font: { family: 'Cairo', size: 11 } } },
+        tooltip: { backgroundColor: '#1e293b', titleColor: '#fff', bodyColor: '#94a3b8', borderColor: 'rgba(255,107,0,0.2)', borderWidth: 1 }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { family: 'Cairo', size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#94a3b8', font: { family: 'Cairo', size: 11 } } }
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('statusChart').getContext('2d');
+  statusChart = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['في الطريق', 'تم التسليم', 'جديدة', 'ملغية', 'تم الاستلام'],
+      datasets: [{
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: ['#ff6b00', '#22c55e', '#3b82f6', '#ef4444', '#a855f7'],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: '#1e293b', titleColor: '#fff', bodyColor: '#94a3b8', borderColor: 'rgba(255,107,0,0.2)', borderWidth: 1 }
+      }
+    }
+  });
+};
+
+const updateCharts = (weeklyPerformance = [], statusCounts = {}) => {
+  const labels = weeklyPerformance.length
+    ? weeklyPerformance.map(row => new Date(row.date).toLocaleDateString('ar-EG', { weekday: 'short' }))
+    : chartLabelsDefault;
+
+  const revenueData = weeklyPerformance.length ? weeklyPerformance.map(row => row.revenue) : [0, 0, 0, 0, 0, 0, 0];
+  const ordersData = weeklyPerformance.length ? weeklyPerformance.map(row => row.orders) : [0, 0, 0, 0, 0, 0, 0];
+
+  revenueChart.data.labels = labels;
+  revenueChart.data.datasets[0].data = revenueData;
+  revenueChart.data.datasets[1].data = ordersData;
+  revenueChart.update();
+
+  statusChart.data.datasets[0].data = [
+    statusCounts.on_the_way || 0,
+    statusCounts.delivered || 0,
+    statusCounts.pending || 0,
+    statusCounts.cancelled || 0,
+    statusCounts.picked_up || 0
+  ];
+  statusChart.update();
+};
+
+const downloadReport = async (path, filename) => {
+  const token = getToken();
+  if (!token) {
+    showLogin('يرجى تسجيل الدخول لتنزيل التقرير.');
+    return;
+  }
+
+  try {
+    const response = await fetch(path, { headers: { Authorization: `Bearer ${token}` } });
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+      alert(result?.message || 'فشل تنزيل التقرير.');
+      return;
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Download error', error);
+    alert('حدث خطأ أثناء تنزيل الملف.');
+  }
+};
+
+const getStatusBadge = (status) => statusMap[status] || { label: status, className: 'status-pending' };
+
+const fetchDashboardData = async () => {
+  updateDashboardDate();
+
+  const token = getToken();
+  if (!token) {
+    showLogin();
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/dashboard/overview', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const result = await response.json();
+    if (!result.success) {
+      if (response.status === 401 || response.status === 403) {
+        clearToken();
+        showLogin('الرجاء تسجيل الدخول للوصول إلى لوحة التحكم.');
+      }
+      return;
+    }
+
+    hideLogin();
+    const { totals = {}, weeklyPerformance = [], orders = [], statusCounts = {} } = result.data;
+    animateCounters(totals);
+    updateCharts(weeklyPerformance, statusCounts);
+
+    document.getElementById('c1').textContent = Number(totals.totalOrders).toLocaleString('ar-EG');
+    document.getElementById('c2').textContent = formatCurrency(totals.dailyRevenue);
+    document.getElementById('c3').textContent = Number(totals.activeRiders).toLocaleString('ar-EG');
+    document.getElementById('c4').textContent = Number(totals.totalCustomers).toLocaleString('ar-EG');
+
+    const ordersBody = document.getElementById('ordersBody');
+    ordersBody.innerHTML = orders.length
+      ? orders.map(order => {
+          const status = getStatusBadge(order.status);
+          return `
+            <tr>
+              <td><span class="order-id">#${order.order_number}</span></td>
+              <td>${order.customer_name}</td>
+              <td><div class="rider-badge"><div class="rider-avatar-sm">${order.rider_name.charAt(0) || '-'}</div>${order.rider_name}</div></td>
+              <td>${order.restaurant_name}</td>
+              <td>${order.location}</td>
+              <td style="font-weight:700;color:var(--green)">${formatCurrency(order.total)}</td>
+              <td><span class="status-pill ${status.className}">${status.label}</span></td>
+              <td style="color:var(--gray)">${new Date(order.created_at).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</td>
+              <td><button class="btn-sm btn-outline" style="padding:5px 10px">👁️</button></td>
+            </tr>
+          `;
+        }).join('')
+      : '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--gray)">لا توجد طلبات حالياً</td></tr>';
+  } catch (error) {
+    console.error('Dashboard fetch failed', error);
+    showLogin('حدث خطأ في الاتصال. حاول مرة أخرى.');
+  }
+};
+
+const login = async () => {
+  const phone = adminPhone.value.trim();
+  const password = adminPassword.value.trim();
+  if (!phone || !password) {
+    loginError.textContent = 'يرجى إدخال رقم الهاتف وكلمة المرور.';
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, password })
+    });
+    const result = await response.json();
+    if (!result.success) {
+      loginError.textContent = result.message || 'فشل تسجيل الدخول.';
+      return;
+    }
+
+    setToken(result.token);
+    hideLogin();
+    fetchDashboardData();
+  } catch (error) {
+    console.error('Login failed', error);
+    loginError.textContent = 'فشل تسجيل الدخول. تحقق من اتصالك.';
+  }
+};
+
+exportPdfBtn.addEventListener('click', () => downloadReport('/api/reports/export/pdf', 'dashboard-report.pdf'));
+exportExcelBtn.addEventListener('click', () => downloadReport('/api/reports/export/excel', 'dashboard-report.csv'));
+refreshBtn.addEventListener('click', fetchDashboardData);
+
+loginBtn.addEventListener('click', login);
+adminPassword.addEventListener('keypress', (event) => {
+  if (event.key === 'Enter') login();
+});
+logoutBtn.addEventListener('click', () => {
+  clearToken();
+  showLogin('تم تسجيل الخروج بنجاح.');
+});
+
+initCharts();
+fetchDashboardData();
+setInterval(fetchDashboardData, 30000);
+
+</script>
+</body>
+</html>

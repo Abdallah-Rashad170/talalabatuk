@@ -1,0 +1,1 @@
+const mysql = require('mysql2/promise'); (async ()=>{ try { const conn = await mysql.createConnection({host:'127.0.0.1', user:'talabatk_user', password:'talabatk_pass', database:'talabatk_db'}); const [rows] = await conn.execute('SELECT 1'); console.log(JSON.stringify(rows)); await conn.end(); } catch(e){ console.error(e.message); process.exit(1);} })();

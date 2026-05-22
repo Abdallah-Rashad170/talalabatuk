@@ -1,0 +1,67 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: talabatk_db
+          MYSQL_USER: talabatk_user
+          MYSQL_PASSWORD: talabatk_pass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysql -hmysql -utalabatk_user -ptalabatk_pass -e 'select 1' && break || sleep 2;
+          done
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Seed database
+        working-directory: backend
+        env:
+          DB_HOST: mysql
+          DB_USER: talabatk_user
+          DB_PASS: talabatk_pass
+          DB_NAME: talabatk_db
+        run: |
+          npm run seed
+          npm run seed:sample || true
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DB_HOST: mysql
+          DB_USER: talabatk_user
+          DB_PASS: talabatk_pass
+          DB_NAME: talabatk_db
+        run: npm test
