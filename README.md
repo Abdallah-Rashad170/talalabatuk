@@ -94,6 +94,6 @@ npm test
 
 - حالة CI: شغّل التغييرات محلياً ونجحت جميع الاختبارات. بعد دفع هذا الفرع سيتنفّذ الـ workflow تلقائياً.
 
-![CI status](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI status](https://github.com/Abdallah-Rashad170/talalabatuk/actions/workflows/ci.yml/badge.svg)
 
 
