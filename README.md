@@ -56,14 +56,14 @@ docker compose -p talabatk up -d
    - Password: talabatk_pass
    - Database: talabatk_db
 
-> ملاحظة: إذا كنت تستخدم Docker Compose، تأكد من أن ملف `backend/.env` يستخدم نفس بيانات الدخول `talabatk_user` و `talabatk_pass` حتى يتمكن السيرفر من الاتصال بقاعدة البيانات.
+> ملاحظة: إذا كنت تستخدم Docker Compose، تأكد من أن ملف `backend/.env` يستخدم نفس بيانات الدخول `talabatk_user` و `talabatk_pass`، وعيّن `DB_HOST=db` كي يتصل السيرفر بخدمة MySQL داخل الحاوية.
 
 4. بعد تشغيل القاعدة، استورد الملف `database/schema.sql` من داخل Adminer أو باستخدام CLI.
 
    إذا كنت تستخدم Docker Compose، يمكنك استيراد الملف مباشرة بالأمر التالي:
 
    ```bash
-   docker compose -p talabatk exec db sh -c 'mysql -u talabatk_user -ptalabatk_pass talabatk_db' < database/schema.sql
+   docker compose -p talabatk exec -T db sh -c 'mysql -u talabatk_user -ptalabatk_pass talabatk_db' < database/schema.sql
    ```
 
 إذا ظهرت رسالة خطأ تتعلق بعدم وجود Docker daemon أو الاتصال بـ `docker API`، فافتح Docker Desktop أولاً ثم أعد تنفيذ الأمر.

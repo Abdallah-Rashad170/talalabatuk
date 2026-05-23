@@ -75,6 +75,13 @@
   ```
 - يمكن استيراد المخطط باستخدام Adminer أو CLI.
 
+  إذا كنت تستخدم Docker Compose، استخدم الأمر التالي لاستيراد الملف:
+  ```bash
+  docker compose -p talabatk exec -T db sh -c 'mysql -u talabatk_user -ptalabatk_pass talabatk_db' < database/schema.sql
+  ```
+
+  وتأكد من ضبط `DB_HOST=db` في `backend/.env` عندما يعمل التطبيق مع خدمة MySQL داخل Docker.
+
 ### 2. إعداد بيئة الـ backend
 
 - انسخ `backend/.env.example` إلى `backend/.env`
