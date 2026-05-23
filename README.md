@@ -56,7 +56,11 @@ docker compose -p talabatk up -d
    - Password: talabatk_pass
    - Database: talabatk_db
 
-> ملاحظة: إذا كنت تستخدم Docker Compose، تأكد من أن ملف `backend/.env` يستخدم نفس بيانات الدخول `talabatk_user` و `talabatk_pass`، وعيّن `DB_HOST=db` كي يتصل السيرفر بخدمة MySQL داخل الحاوية.
+> ملاحظة: إذا كنت تستخدم Docker Compose من الجهاز المضيف، استخدم `DB_HOST=127.0.0.1` و `DB_PORT=3307` في `backend/.env` لأن خدمة MySQL داخل Compose تُحجب عن طريق المنفذ المحلي `3307`.
+>
+> إذا كان لديك خادم MySQL محلي آخر على `3306` (مثل XAMPP)، فهذا يمنع Docker من استخدام ذلك المنفذ مباشرة.
+>
+> إذا كنت تريد تشغيل الـ backend داخل Docker نفسها، فاستخدم `DB_HOST=db` و `DB_PORT=3306` بدلاً من ذلك.
 
 4. بعد تشغيل القاعدة، استورد الملف `database/schema.sql` من داخل Adminer أو باستخدام CLI.
 
